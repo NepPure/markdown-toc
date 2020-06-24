@@ -15,40 +15,43 @@ import {
     TextEditorEdit
 } from 'vscode';
 
-const REGEXP_TOC_START          = /\s*<!--(.*)TOC(.*)-->/gi;
-const REGEXP_TOC_STOP           = /\s*<!--(.*)\/TOC(.*)-->/gi;
-const REGEXP_TOC_CONFIG         = /\w+[:=][\w.]+/gi;
-const REGEXP_TOC_CONFIG_ITEM    = /(\w+)[:=]([\w.]+)/;
-const REGEXP_MARKDOWN_ANCHOR    = /^<a id="markdown-.+" name=".+"><\/a\>/;
-const REGEXP_HEADER             = /^(\#{1,6})\s*(.+)/;
-const REGEXP_CODE_BLOCK1        = /^```/;
-const REGEXP_CODE_BLOCK2        = /^~~~/;
-const REGEXP_ANCHOR             = /\[.+\]\(#(.+)\)/
-const REGEXP_IGNORE_TITLE       = /<!-- TOC ignore:true -->/
+import anchorMarkdownHeader from "../lib/anchor-markdown-header/anchor-markdown-header-neppure"
 
-const DEPTH_FROM                = "depthFrom";
-const DEPTH_TO                  = "depthTo";
-const INSERT_ANCHOR             = "insertAnchor";
-const WITH_LINKS                = "withLinks";
-const ORDERED_LIST              = "orderedList";
-const UPDATE_ON_SAVE            = "updateOnSave";
-const ANCHOR_MODE               = "anchorMode";
+const REGEXP_TOC_START = /\s*<!--(.*)TOC(.*)-->/gi;
+const REGEXP_TOC_STOP = /\s*<!--(.*)\/TOC(.*)-->/gi;
+const REGEXP_TOC_CONFIG = /\w+[:=][\w.]+/gi;
+const REGEXP_TOC_CONFIG_ITEM = /(\w+)[:=]([\w.]+)/;
+const REGEXP_MARKDOWN_ANCHOR = /^<a id="markdown-.+" name=".+"><\/a\>/;
+const REGEXP_HEADER = /^(\#{1,6})\s*(.+)/;
+const REGEXP_CODE_BLOCK1 = /^```/;
+const REGEXP_CODE_BLOCK2 = /^~~~/;
+const REGEXP_ANCHOR = /\[.+\]\(#(.+)\)/
+const REGEXP_IGNORE_TITLE = /<!-- TOC ignore:true -->/
 
-const LOWER_DEPTH_FROM          = DEPTH_FROM.toLocaleLowerCase();
-const LOWER_DEPTH_TO            = DEPTH_TO.toLocaleLowerCase();
-const LOWER_INSERT_ANCHOR       = INSERT_ANCHOR.toLocaleLowerCase();
-const LOWER_WITH_LINKS          = WITH_LINKS.toLocaleLowerCase();
-const LOWER_ORDERED_LIST        = ORDERED_LIST.toLocaleLowerCase();
-const LOWER_UPDATE_ON_SAVE      = UPDATE_ON_SAVE.toLocaleLowerCase();
-const LOWER_ANCHOR_MODE         = ANCHOR_MODE.toLocaleLowerCase();
+const DEPTH_FROM = "depthFrom";
+const DEPTH_TO = "depthTo";
+const INSERT_ANCHOR = "insertAnchor";
+const WITH_LINKS = "withLinks";
+const ORDERED_LIST = "orderedList";
+const UPDATE_ON_SAVE = "updateOnSave";
+const ANCHOR_MODE = "anchorMode";
 
-const ANCHOR_MODE_LIST          =
-[
-    "github.com",
-    "bitbucket.org",
-    "ghost.org",
-    "gitlab.com"
-]
+const LOWER_DEPTH_FROM = DEPTH_FROM.toLocaleLowerCase();
+const LOWER_DEPTH_TO = DEPTH_TO.toLocaleLowerCase();
+const LOWER_INSERT_ANCHOR = INSERT_ANCHOR.toLocaleLowerCase();
+const LOWER_WITH_LINKS = WITH_LINKS.toLocaleLowerCase();
+const LOWER_ORDERED_LIST = ORDERED_LIST.toLocaleLowerCase();
+const LOWER_UPDATE_ON_SAVE = UPDATE_ON_SAVE.toLocaleLowerCase();
+const LOWER_ANCHOR_MODE = ANCHOR_MODE.toLocaleLowerCase();
+
+const ANCHOR_MODE_LIST =
+    [
+        "github.com",
+        "bitbucket.org",
+        "ghost.org",
+        "gitlab.com",
+        "gitea.io"
+    ]
 
 export function activate(context: ExtensionContext) {
 
@@ -59,7 +62,7 @@ export function activate(context: ExtensionContext) {
     let disposable_deleteMarkdownToc = commands.registerCommand('extension.deleteMarkdownToc', () => { markdownTocTools.deleteMarkdownToc(); });
     let disposable_updateMarkdownSections = commands.registerCommand('extension.updateMarkdownSections', () => { markdownTocTools.updateMarkdownSections(); });
     let disposable_deleteMarkdownSections = commands.registerCommand('extension.deleteMarkdownSections', () => { markdownTocTools.deleteMarkdownSections(); });
-    let disposable_saveMarkdownToc = workspace.onDidSaveTextDocument((doc : TextDocument) => { markdownTocTools.notifyDocumentSave(); });
+    let disposable_saveMarkdownToc = workspace.onDidSaveTextDocument((doc: TextDocument) => { markdownTocTools.notifyDocumentSave(); });
 
     // Add to a list of disposables which are disposed when this extension is deactivated.
     context.subscriptions.push(disposable_updateMarkdownToc);
@@ -72,23 +75,23 @@ export function activate(context: ExtensionContext) {
 class MarkdownTocTools {
 
     options = {
-        DEPTH_FROM      : 1,
-        DEPTH_TO        : 6,
-        INSERT_ANCHOR   : false,
-        WITH_LINKS      : true,
-        ORDERED_LIST    : false,
-        UPDATE_ON_SAVE  : true,
-        ANCHOR_MODE     : ANCHOR_MODE_LIST[0]
+        DEPTH_FROM: 1,
+        DEPTH_TO: 6,
+        INSERT_ANCHOR: false,
+        WITH_LINKS: true,
+        ORDERED_LIST: false,
+        UPDATE_ON_SAVE: true,
+        ANCHOR_MODE: ANCHOR_MODE_LIST[0]
     };
     optionsFlag = [];
     saveBySelf = false;
 
     // Public function
-    public updateMarkdownToc(isBySave : boolean = false) {
+    public updateMarkdownToc(isBySave: boolean = false) {
         let editor = window.activeTextEditor;
         let markdownTocTools = this;
 
-        window.activeTextEditor.edit(function(editBuilder) {
+        window.activeTextEditor.edit(function (editBuilder) {
             let tocRange = markdownTocTools.getTocRange();
             markdownTocTools.updateOptions(tocRange);
 
@@ -112,7 +115,7 @@ class MarkdownTocTools {
     public deleteMarkdownToc() {
         let markdownTocTools = this;
 
-        window.activeTextEditor.edit(function(editBuilder) {
+        window.activeTextEditor.edit(function (editBuilder) {
             let tocRange = markdownTocTools.getTocRange();
             if (tocRange == null) return;
 
@@ -126,9 +129,9 @@ class MarkdownTocTools {
         let tocRange = this.getTocRange();
         this.updateOptions(tocRange);
         let headerList = this.getHeaderList();
-        
-        window.activeTextEditor.edit(function(editBuilder) {
-            headerList.forEach(element => {                
+
+        window.activeTextEditor.edit(function (editBuilder) {
+            headerList.forEach(element => {
                 let newHeader = element.header + " " + element.orderedList + " " + element.baseTitle
                 editBuilder.replace(element.range, newHeader);
             });
@@ -140,7 +143,7 @@ class MarkdownTocTools {
         this.updateOptions(tocRange);
         let headerList = this.getHeaderList();
 
-        window.activeTextEditor.edit(function(editBuilder) {
+        window.activeTextEditor.edit(function (editBuilder) {
             headerList.forEach(element => {
                 let newHeader = element.header + " " + element.baseTitle
                 editBuilder.replace(element.range, newHeader);
@@ -165,9 +168,9 @@ class MarkdownTocTools {
     // Private function
     private getTocRange() {
         let doc = window.activeTextEditor.document;
-        let start, stop : Position;
+        let start, stop: Position;
 
-        for(let index = 0; index < doc.lineCount; index++) {
+        for (let index = 0; index < doc.lineCount; index++) {
             let lineText = doc.lineAt(index).text;
             if ((start == null) && (lineText.match(REGEXP_TOC_START))) {
                 start = new Position(index, 0);
@@ -182,28 +185,28 @@ class MarkdownTocTools {
         return null;
     }
 
-    private updateOptions(tocRange : Range) {
+    private updateOptions(tocRange: Range) {
         this.loadConfigurations();
         this.loadCustomOptions(tocRange);
     }
 
     private loadConfigurations() {
-        this.options.DEPTH_FROM     = <number>  workspace.getConfiguration('markdown-toc').get('depthFrom');
-        this.options.DEPTH_TO       = <number>  workspace.getConfiguration('markdown-toc').get('depthTo');
-        this.options.INSERT_ANCHOR  = <boolean> workspace.getConfiguration('markdown-toc').get('insertAnchor');
-        this.options.WITH_LINKS     = <boolean> workspace.getConfiguration('markdown-toc').get('withLinks');
-        this.options.ORDERED_LIST   = <boolean> workspace.getConfiguration('markdown-toc').get('orderedList');
-        this.options.UPDATE_ON_SAVE = <boolean> workspace.getConfiguration('markdown-toc').get('updateOnSave');
-        this.options.ANCHOR_MODE    = <string>  workspace.getConfiguration('markdown-toc').get('anchorMode');
+        this.options.DEPTH_FROM = <number>workspace.getConfiguration('markdown-toc').get('depthFrom');
+        this.options.DEPTH_TO = <number>workspace.getConfiguration('markdown-toc').get('depthTo');
+        this.options.INSERT_ANCHOR = <boolean>workspace.getConfiguration('markdown-toc').get('insertAnchor');
+        this.options.WITH_LINKS = <boolean>workspace.getConfiguration('markdown-toc').get('withLinks');
+        this.options.ORDERED_LIST = <boolean>workspace.getConfiguration('markdown-toc').get('orderedList');
+        this.options.UPDATE_ON_SAVE = <boolean>workspace.getConfiguration('markdown-toc').get('updateOnSave');
+        this.options.ANCHOR_MODE = <string>workspace.getConfiguration('markdown-toc').get('anchorMode');
     }
 
-    private loadCustomOptions(tocRange : Range) {
+    private loadCustomOptions(tocRange: Range) {
         this.optionsFlag = [];
         if (tocRange == null) return;
         let optionsText = window.activeTextEditor.document.lineAt(tocRange.start.line).text;
         let options = optionsText.match(REGEXP_TOC_CONFIG);
         if (options == null) return;
-        
+
         options.forEach(element => {
             let pair = REGEXP_TOC_CONFIG_ITEM.exec(element)
             let key = pair[1].toLocaleLowerCase();
@@ -242,53 +245,53 @@ class MarkdownTocTools {
         });
     }
 
-    private insertAnchor(editBuilder : TextEditorEdit, headerList : any[]) {
+    private insertAnchor(editBuilder: TextEditorEdit, headerList: any[]) {
         if (!this.options.INSERT_ANCHOR) return;
         headerList.forEach(element => {
             let name = element.hash.match(REGEXP_ANCHOR)[1];
-            let text = [ '<a id="markdown-', name, '" name="', name, '"></a>\n' ];
+            let text = ['<a id="markdown-', name, '" name="', name, '"></a>\n'];
             let insertPosition = new Position(element.line, 0);
             editBuilder.insert(insertPosition, text.join(''));
         });
     }
 
-    private deleteAnchor(editBuilder : TextEditorEdit) {
+    private deleteAnchor(editBuilder: TextEditorEdit) {
         let doc = window.activeTextEditor.document;
-        for(let index = 0; index < doc.lineCount; index++) {
+        for (let index = 0; index < doc.lineCount; index++) {
             let lineText = doc.lineAt(index).text;
-            if(lineText.match(REGEXP_MARKDOWN_ANCHOR) == null) continue;
+            if (lineText.match(REGEXP_MARKDOWN_ANCHOR) == null) continue;
 
             let range = new Range(new Position(index, 0), new Position(index + 1, 0));
             editBuilder.delete(range);
         }
     }
 
-    private createToc(editBuilder : TextEditorEdit, headerList : any[], insertPosition : Position) {
-        let lineEnding      = <string>  workspace.getConfiguration("files").get("eol");
-        let tabSize         = <number>  workspace.getConfiguration("[markdown]")["editor.tabSize"];
-        let insertSpaces    = <boolean> workspace.getConfiguration("[markdown]")["editor.insertSpaces"];
-            
-        if(tabSize === undefined || tabSize === null) {
-            tabSize = <number> workspace.getConfiguration("editor").get("tabSize");
+    private createToc(editBuilder: TextEditorEdit, headerList: any[], insertPosition: Position) {
+        let lineEnding = <string>workspace.getConfiguration("files").get("eol");
+        let tabSize = <number>workspace.getConfiguration("[markdown]")["editor.tabSize"];
+        let insertSpaces = <boolean>workspace.getConfiguration("[markdown]")["editor.insertSpaces"];
+
+        if (tabSize === undefined || tabSize === null) {
+            tabSize = <number>workspace.getConfiguration("editor").get("tabSize");
         }
-        if(insertSpaces === undefined || insertSpaces === null) {
-            insertSpaces = <boolean> workspace.getConfiguration("editor").get("insertSpaces");
+        if (insertSpaces === undefined || insertSpaces === null) {
+            insertSpaces = <boolean>workspace.getConfiguration("editor").get("insertSpaces");
         }
 
         let tab = '\t';
         if (insertSpaces && tabSize > 0) {
             tab = " ".repeat(tabSize);
-        }       
+        }
 
         let optionsText = [];
         optionsText.push('<!-- TOC ');
-        if (this.optionsFlag.indexOf(DEPTH_FROM)    != -1) optionsText.push(DEPTH_FROM	    + ':' + this.options.DEPTH_FROM     +' ');
-        if (this.optionsFlag.indexOf(DEPTH_TO)      != -1) optionsText.push(DEPTH_TO        + ':' + this.options.DEPTH_TO	    +' ');
-        if (this.optionsFlag.indexOf(INSERT_ANCHOR) != -1) optionsText.push(INSERT_ANCHOR   + ':' + this.options.INSERT_ANCHOR  +' ');
-        if (this.optionsFlag.indexOf(ORDERED_LIST)  != -1) optionsText.push(ORDERED_LIST    + ':' + this.options.ORDERED_LIST   +' ');
-        if (this.optionsFlag.indexOf(UPDATE_ON_SAVE)!= -1) optionsText.push(UPDATE_ON_SAVE  + ':' + this.options.UPDATE_ON_SAVE +' ');
-        if (this.optionsFlag.indexOf(WITH_LINKS)    != -1) optionsText.push(WITH_LINKS      + ':' + this.options.WITH_LINKS     +' ');
-        if (this.optionsFlag.indexOf(ANCHOR_MODE)   != -1) optionsText.push(ANCHOR_MODE     + ':' + this.options.ANCHOR_MODE    +' ');
+        if (this.optionsFlag.indexOf(DEPTH_FROM) != -1) optionsText.push(DEPTH_FROM + ':' + this.options.DEPTH_FROM + ' ');
+        if (this.optionsFlag.indexOf(DEPTH_TO) != -1) optionsText.push(DEPTH_TO + ':' + this.options.DEPTH_TO + ' ');
+        if (this.optionsFlag.indexOf(INSERT_ANCHOR) != -1) optionsText.push(INSERT_ANCHOR + ':' + this.options.INSERT_ANCHOR + ' ');
+        if (this.optionsFlag.indexOf(ORDERED_LIST) != -1) optionsText.push(ORDERED_LIST + ':' + this.options.ORDERED_LIST + ' ');
+        if (this.optionsFlag.indexOf(UPDATE_ON_SAVE) != -1) optionsText.push(UPDATE_ON_SAVE + ':' + this.options.UPDATE_ON_SAVE + ' ');
+        if (this.optionsFlag.indexOf(WITH_LINKS) != -1) optionsText.push(WITH_LINKS + ':' + this.options.WITH_LINKS + ' ');
+        if (this.optionsFlag.indexOf(ANCHOR_MODE) != -1) optionsText.push(ANCHOR_MODE + ':' + this.options.ANCHOR_MODE + ' ');
         optionsText.push('-->' + lineEnding);
 
         let text = [];
@@ -301,8 +304,8 @@ class MarkdownTocTools {
         headerList.forEach(element => {
             minDepth = Math.min(element.depth, minDepth);
         });
-        let startDepth = Math.max(minDepth , this.options.DEPTH_FROM);
-        
+        let startDepth = Math.max(minDepth, this.options.DEPTH_FROM);
+
         headerList.forEach(element => {
             if (element.depth <= this.options.DEPTH_TO) {
                 let length = element.depth - startDepth;
@@ -312,7 +315,7 @@ class MarkdownTocTools {
                         waitResetList[index] = false;
                     }
                 }
-                
+
                 let row = [
                     tab.repeat(length),
                     this.options.ORDERED_LIST ? (++indicesOfDepth[length] + '. ') : '- ',
@@ -376,28 +379,27 @@ class MarkdownTocTools {
             } else {
                 hashMap[title] += 1;
             }
-            
+
             let hash = this.getHash(title, this.options.ANCHOR_MODE, hashMap[title]);
             headerList.push({
-                line : index,
-                depth : depth,
-                title : title,
-                hash : hash,
-                range : new Range(index, 0, index, lineText.length),
-                header : headerResult[1],
-                orderedList : orderedListStr,
-                baseTitle : baseTitle
+                line: index,
+                depth: depth,
+                title: title,
+                hash: hash,
+                range: new Range(index, 0, index, lineText.length),
+                header: headerResult[1],
+                orderedList: orderedListStr,
+                baseTitle: baseTitle
             });
         }
         return headerList;
     }
 
-    private getHash(headername : string, mode : string, repetition : number) {
-        let anchor = require('anchor-markdown-header');
-        return decodeURI(anchor(headername, mode, repetition));
+    private getHash(headername: string, mode: string, repetition: number) {
+        return decodeURI(anchorMarkdownHeader(headername, mode, repetition, undefined));
     }
 
-    private parseValidNumber(value : string) {
+    private parseValidNumber(value: string) {
         let num = parseInt(value);
         if (num < 1) {
             return 1;
@@ -408,14 +410,14 @@ class MarkdownTocTools {
         return num;
     }
 
-    private parseValidAnchorMode(value : string) {
+    private parseValidAnchorMode(value: string) {
         if (ANCHOR_MODE_LIST.indexOf(value) != -1) {
             return value;
         }
         return ANCHOR_MODE_LIST[0];
     }
 
-    private parseBool(value : string) {
+    private parseBool(value: string) {
         return value.toLocaleLowerCase() == 'true';
     }
 

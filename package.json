@@ -1,28 +1,27 @@
 {
     "name": "markdown-toc",
     "displayName": "Markdown TOC",
-    "description": "Markdown TOC(Table Of Contents) Plugin for Visual Studio Code.",
-    "version": "1.6.0",
+    "description": "fork from https://github.com/AlanWalk/Markdown-TOC  Markdown TOC(Table Of Contents) Plugin for Visual Studio Code.",
+    "version": "1.7.0",
     "icon": "img/markdown-toc.png",
     "license": "MIT",
     "author": {
-        "email": "alanwalk93@gmail.com",
-        "name": "Alan Walk",
-        "url": "https://blog.otorb.com"
+        "email": "oyyz@vip.qq.com",
+        "name": "NepPure"
     },
     "bugs": {
-        "url": "https://github.com/AlanWalk/Markdown-TOC/issues"
+        "url": "https://github.com/NepPure/markdown-toc.git/issues"
     },
     "repository": {
         "type": "git",
-        "url": "https://github.com/AlanWalk/Markdown-TOC.git"
+        "url": "https://github.com/NepPure/markdown-toc.git"
     },
     "keywords": [
         "markdown",
         "toc"
     ],
-    "homepage": "https://github.com/AlanWalk/Markdown-TOC",
-    "publisher": "AlanWalk",
+    "homepage": "https://github.com/NepPure/markdown-toc",
+    "publisher": "NepPure",
     "engines": {
         "vscode": "^1.0.0"
     },
@@ -35,22 +34,23 @@
     "main": "./out/src/extension",
     "contributes": {
         "commands": [
-        {
-            "command": "extension.updateMarkdownToc",
-            "title": "Markdown TOC: Insert/Update"
-        },
-        {
-            "command": "extension.deleteMarkdownToc",
-            "title": "Markdown TOC: Delete"
-        },
-        {
-            "command": "extension.updateMarkdownSections",
-            "title": "Markdown Sections: Insert/Update"
-        },
-        {
-            "command": "extension.deleteMarkdownSections",
-            "title": "Markdown Sections: Delete"
-        }],
+            {
+                "command": "extension.updateMarkdownToc",
+                "title": "Markdown 目录: 新增/更新"
+            },
+            {
+                "command": "extension.deleteMarkdownToc",
+                "title": "Markdown 目录: 删除"
+            },
+            {
+                "command": "extension.updateMarkdownSections",
+                "title": "Markdown 序号: 新增/更新"
+            },
+            {
+                "command": "extension.deleteMarkdownSections",
+                "title": "Markdown 序号: 删除"
+            }
+        ],
         "menus": {
             "editor/context": [
                 {
@@ -71,7 +71,7 @@
                 }
             ]
         },
-        "keybindings":[
+        "keybindings": [
             {
                 "command": "extension.updateMarkdownToc",
                 "key": "ctrl+m t"
@@ -83,48 +83,49 @@
         ],
         "configuration": {
             "type": "object",
-            "title": "Markdown TOC configuration",
+            "title": "Markdown 目录配置",
             "properties": {
                 "markdown-toc.depthFrom": {
                     "type": "number",
-                    "default": 1,
-                    "description": "Depth control [1-6]."
+                    "default": 2,
+                    "description": "开始目录层级[1-6]"
                 },
                 "markdown-toc.depthTo": {
                     "type": "number",
                     "default": 6,
-                    "description": "Depth control [1-6]."
+                    "description": "最大目录层级[1-6]"
                 },
                 "markdown-toc.insertAnchor": {
                     "type": "boolean",
                     "default": false,
-                    "description": "Auto insert anchor for link."
+                    "description": "自动在标题添锚点"
                 },
                 "markdown-toc.withLinks": {
                     "type": "boolean",
                     "default": true,
-                    "description": "Auto insert link."
+                    "description": "自动创建链接"
                 },
                 "markdown-toc.orderedList": {
                     "type": "boolean",
                     "default": false,
-                    "description": "Use ordered list (1. ..., 2. ...)."
+                    "description": "标题使用有序列表(1. ..., 2. ...)"
                 },
                 "markdown-toc.updateOnSave": {
                     "type": "boolean",
                     "default": true,
-                    "description": "Auto update on save."
+                    "description": "保存时自动更新"
                 },
                 "markdown-toc.anchorMode": {
                     "type": "string",
-                    "default": "github.com",
-                    "description": "anchor mode.",
-					"enum": [
-						"github.com",
-						"bitbucket.org",
-						"ghost.org",
-                        "gitlab.com"
-					]
+                    "default": "gitea.io",
+                    "description": "目录模式",
+                    "enum": [
+                        "github.com",
+                        "bitbucket.org",
+                        "ghost.org",
+                        "gitlab.com",
+                        "gitea.io"
+                    ]
                 }
             }
         }
@@ -135,10 +136,10 @@
         "postinstall": "node ./node_modules/vscode/bin/install"
     },
     "dependencies": {
-        "anchor-markdown-header": "^0.5.7"
+        "emoji-regex": "~6.1.0"
     },
     "devDependencies": {
-        "anchor-markdown-header": "^0.5.7",
+        "tap": "~0.4.8",
         "typescript": "^1.8.5",
         "vscode": "^0.11.0"
     }
