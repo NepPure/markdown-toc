@@ -15,7 +15,7 @@ import {
     TextEditorEdit
 } from 'vscode';
 
-import anchorMarkdownHeader from "../lib/anchor-markdown-header/anchor-markdown-header-neppure"
+import anchor from "../lib/anchor-markdown-header/anchor-markdown-header-neppure"
 
 const REGEXP_TOC_START = /\s*<!--(.*)TOC(.*)-->/gi;
 const REGEXP_TOC_STOP = /\s*<!--(.*)\/TOC(.*)-->/gi;
@@ -267,7 +267,7 @@ class MarkdownTocTools {
     }
 
     private createToc(editBuilder: TextEditorEdit, headerList: any[], insertPosition: Position) {
-        let lineEnding = <string>workspace.getConfiguration("files").get("eol");
+        let lineEnding = "\r\n";
         let tabSize = <number>workspace.getConfiguration("[markdown]")["editor.tabSize"];
         let insertSpaces = <boolean>workspace.getConfiguration("[markdown]")["editor.insertSpaces"];
 
@@ -396,7 +396,7 @@ class MarkdownTocTools {
     }
 
     private getHash(headername: string, mode: string, repetition: number) {
-        return decodeURI(anchorMarkdownHeader(headername, mode, repetition, undefined));
+        return decodeURI(anchor(headername, mode, repetition, undefined));
     }
 
     private parseValidNumber(value: string) {

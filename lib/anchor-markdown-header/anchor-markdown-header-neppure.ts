@@ -1,6 +1,3 @@
-'use strict';
-
-import emojiRegex from 'emoji-regex';
 
 // https://github.com/joyent/node/blob/192192a09e2d2e0d6bdd0934f602d2dbbf10ed06/tools/doc/html.js#L172-L183
 function getNodejsId(text, repetition) {
@@ -38,13 +35,13 @@ function getGithubId(text, repetition) {
   }
 
   // Strip emojis
-  text = text.replace(emojiRegex(), '')
+  // text = text.replace(emojiRegex(), '')
 
   return text;
 }
 
 function basicGiteaId(text) {
-  return text.replace(/ /g,'-')
+  return text.replace(/ /g,'')
     // escape codes
     .replace(/%([abcdef]|\d){2,2}/ig, '')
     // single chars that are removed
@@ -64,7 +61,7 @@ function getGiteaId(text, repetition) {
   }
 
   // Strip emojis
-  text = text.replace(emojiRegex(), '')
+  // text = text.replace(emojiRegex(), '')
 
   return text;
 }
